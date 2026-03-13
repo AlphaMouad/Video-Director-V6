@@ -415,11 +415,20 @@ export const engineerScenePrompt = async (
   inframeImage: File, 
   outframeImage: File, 
   targetCharacterImage: File,
-  completedScenes: EngineeredScene[]
+  completedScenes: EngineeredScene[],
+  contextImages: File[] = []
 ): Promise<string> => {
   const inframeB64 = await fileToBase64(inframeImage);
   const outframeB64 = await fileToBase64(outframeImage);
   const targetCharB64 = await fileToBase64(targetCharacterImage);
+
+  // Convert all uploaded context images
+  const contextImagesData = await Promise.all(
+    contextImages.map(async (file) => ({
+      mimeType: file.type,
+      data: await fileToBase64(file)
+    }))
+  );
 
   const consistencyContext = completedScenes.length === 0
   ? "This is the PRIMARY ANCHOR SCENE. Define the 'World Physics', Lighting Temperature, Camera Framing, and Skin Texture that must be locked in and maintained for the entire project."
@@ -449,9 +458,10 @@ CONTENT REQUIREMENTS:
 - **A-LIST CINEMATOGRAPHY:** Shot on ARRI Alexa 65, 85mm Zeiss Master Prime lens at f/1.4. Cinematic 8k resolution. Flawless color grading (Kodak Vision3 500T 5219 film stock emulation).
 - **IDENTITY SOURCE:** Use the [Target Character Image] as the ABSOLUTE SOURCE OF TRUTH for the character's physical identity (face, hair, age, skin texture).
 - **POSE/LIGHTING SOURCE:** Use the [In-Frame Image] and [Out-Frame Image] as the reference for the character's pose, lighting environment, and camera framing.
-- Focus on material physics: "matte skin finish with subtle pores," "unstructured bespoke suit in deep espresso or midnight navy," "heavy-weight white cotton shirt with a fluid natural drape."
-- Lighting: "Warm Institutional" - Highly diffused cinematic Rembrandt lighting. Soft shadows. A very subtle amber rim light on the shoulder.
-- Environment: "Lived-in Luxury" - Softly blurred dark charcoal marble background or an executive suite at 5:00 PM. Give the speaker an inch or two of natural "breathing room" in the frame to feel relaxed and unbothered.
+- **WARDROBE & ENVIRONMENT CONFLICT RESOLUTION (CRITICAL):** You MUST strictly analyze the provided Context Images (if any), Target Character Image, and Reference Frames. Do NOT hallucinate standard "corporate suits" or generic backgrounds if the images show something else. The generated visual description must perfectly match the specific fabrics, colors, styles, and environment shown in the user's uploaded images. If the subject is wearing a casual shirt in a living room, describe THAT with elite cinematic language. Do not invent details that contradict the visuals provided.
+- Focus on material physics: "matte skin finish with subtle pores." Describe the precise texture, weight, and drape of whatever clothing they are actually wearing in the reference/context images.
+- Lighting: Highly diffused cinematic Rembrandt lighting. Soft shadows. A very subtle rim light on the shoulder to separate them from the background.
+- Environment: Describe the exact environment visible in the context/reference images, but elevate it to "Lived-in Luxury." Give the speaker an inch or two of natural "breathing room" in the frame to feel relaxed and unbothered.
 
 2. Action & Performance (HOLLYWOOD DIRECTING & SCENE PURPOSE):
 - **SCENE PURPOSE OPTIMIZATION:** This scene's role is '${scene.role}'. Engineer the micro-expressions, posture, and magnetic presence to flawlessly execute this specific psychological purpose.
@@ -494,7 +504,8 @@ Generate the Prompt:
         { text: prompt },
         { inlineData: { mimeType: targetCharacterImage.type, data: targetCharB64 } },
         { inlineData: { mimeType: inframeImage.type, data: inframeB64 } },
-        { inlineData: { mimeType: outframeImage.type, data: outframeB64 } }
+        { inlineData: { mimeType: outframeImage.type, data: outframeB64 } },
+        ...contextImagesData.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.data } }))
       ]
     }],
     config: { thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH } }

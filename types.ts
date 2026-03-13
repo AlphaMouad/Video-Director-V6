@@ -178,6 +178,7 @@ export interface AppState {
   // Phase 1: Dual Upload
   referenceVideo: File | null;
   targetCharacter: File | null;         // New: User uploads the character they want to generate
+  contextImages: File[];                // Up to 5 context images for wardrobe/environment
   newScript: string;                    // The full new script text
 
   // Phase 2: Reference Analysis

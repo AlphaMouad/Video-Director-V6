@@ -14,6 +14,7 @@ export default function App() {
     step: 'upload',
     referenceVideo: null,
     targetCharacter: null,
+    contextImages: [],
     newScript: '',
     referenceAnalysis: null,
     scriptSegmentation: null,
@@ -41,6 +42,7 @@ export default function App() {
   const [isKeySet, setIsKeySet] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetCharInputRef = useRef<HTMLInputElement>(null);
+  const contextImagesInputRef = useRef<HTMLInputElement>(null);
   const inframeRef = useRef<HTMLInputElement>(null);
   const outframeRef = useRef<HTMLInputElement>(null);
   const customInframeRef = useRef<HTMLInputElement>(null);
@@ -158,7 +160,8 @@ export default function App() {
         state.inframeImage,
         state.outframeImage,
         state.targetCharacter!,
-        state.completedScenes
+        state.completedScenes,
+        state.contextImages
       );
 
       const newEngineered: EngineeredScene = {
@@ -365,6 +368,40 @@ export default function App() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Context Images Upload */}
+            <div
+              className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-300 cursor-pointer relative group ${state.contextImages.length > 0 ? 'border-gold/50 bg-gold/5' : 'border-slate-700 hover:border-gold/30 hover:bg-slate-900/50'}`}
+              onClick={() => contextImagesInputRef.current?.click()}
+            >
+              <input
+                type="file"
+                ref={contextImagesInputRef}
+                className="hidden"
+                accept="image/*"
+                multiple
+                onChange={e => {
+                  if (e.target.files) {
+                    const files = Array.from(e.target.files).slice(0, 5); // Max 5
+                    setState(s => ({ ...s, contextImages: files }));
+                  }
+                }}
+              />
+              <div className={`w-12 h-12 mx-auto mb-4 transition-colors duration-300 ${state.contextImages.length > 0 ? 'text-gold' : 'text-slate-600 group-hover:text-gold/60'}`}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </div>
+              {state.contextImages.length > 0 ? (
+                <div>
+                    <p className="text-white text-lg font-medium">{state.contextImages.length} Image(s) Selected</p>
+                    <p className="text-xs text-gold uppercase mt-1">Context Loaded</p>
+                </div>
+              ) : (
+                <div>
+                    <p className="text-slate-300 group-hover:text-white transition-colors font-medium">Upload Context Images (Optional)</p>
+                    <p className="text-slate-500 text-sm mt-1">Up to 5 images for environment & wardrobe references</p>
+                </div>
+              )}
             </div>
 
             {/* Script Textarea */}
