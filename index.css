@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-gold: #ca8a04;
+}
+
+body { background-color: #020617; color: #e2e8f0; }
+.text-glow { text-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(202, 138, 4, 0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(202, 138, 4, 0.3); }
