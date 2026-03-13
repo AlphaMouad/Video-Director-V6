@@ -30,34 +30,35 @@ export const analyzeReferenceVideo = async (videoFile: File): Promise<ReferenceA
   const base64Data = await fileToBase64(videoFile);
   
   const prompt = `
-You are an Elite Behavioral Profiler and Cinematic Intelligence Engine.
+You are an Elite Hollywood Acting Coach, Master Behavioral Profiler, and Cinematic Intelligence Engine.
 
-Your task is to deconstruct this performer's "Source Code." Do not just describe what they do; analyze WHY they are persuasive. We need to extract the subtle, sub-perceptual signals that create AUTHORITY and TRUST.
+Your task is to deconstruct this performer's "Source Code" to absolute world-class standards. Do not just describe what they do; analyze WHY their performance is magnetically persuasive. We need to extract the subtle, sub-perceptual signals, elite presentation skills, and Hollywood-caliber delivery mechanics that create irresistible AUTHORITY, CHARISMA, and TRUST.
 
 === DEEP DIVE EXTRACTION PROTOCOL ===
 
 1. CHARACTER PERFORMANCE DNA (The "Micro-Signal" Layer)
-   Study the signals that are barely visible but highly felt.
+   Study the signals that are barely visible but highly felt. Deconstruct the performance like an A-List Hollywood Director.
 
    PHYSICAL IDENTITY:
    - Precise biological details (Skin texture, bone structure, hairline).
    - Wardrobe material analysis (Wool weight, collar stiffness, fabric drape).
 
-   VOICE DNA (If audio exists):
-   - Analyze the "Silence": How long do they hold a pause before a critical word?
-   - The "Drop": Do they lower their pitch at the end of sentences (authority) or raise it (uncertainty)? capture the Authority Drop.
+   VOICE DNA & DYNAMIC RANGE (If audio exists):
+   - Analyze the "Silence": Identify masterful dramatic pauses. How long do they hold tension before delivering a critical payload?
+   - The "Drop": Capture the "Authority Drop" — the exact moment they lower pitch to anchor a statement in absolute certainty.
+   - Vocal Resonance & Cadence: Map the breath control and rhythmic variations that create a hypnotic speaking cadence.
 
    ACTING DNA — THE "TRUTH" LAYER:
-   - **Micro-Expressions:** Ignore big smiles/frowns. Look for the twitch of the orbicularis oculi, the tightening of the jaw, the suppression of a smirk.
-   - **Blink Rate:** Do they blink slowly (high confidence) or rapidly (processing)?
-   - **Head Stability:** Does the head remain perfectly still while speaking (Predator/Authority mode)?
-   - **The "Thought Process":** How do they look when *thinking*? (e.g., "Eyes shift slightly left, breath held for 0.2s").
-   - **Hand-Eye Coordination:** Do gestures precede the word, hit on the word, or trail the word? (Preceding gestures = Truth).
+   - **Masterful Micro-Expressions:** Identify the subtle, authentic emotional leaks. The tightening of the jaw, a brief micro-smirk, the precise activation of the orbicularis oculi (Duchenne marker).
+   - **Blink Rate & Gaze Dynamics:** Do they use the "Predator Gaze" (sustained, unblinking focus) or "Processing Blinks"?
+   - **High-Status Stillness:** Analyze how they command the frame without unnecessary movement. Does the head remain perfectly anchored during critical delivery?
+   - **The "Thought Process":** How do they visibly process information? (e.g., "Eyes shift slightly left, breath held for 0.2s, creating the illusion of real-time realization").
+   - **Fluid Hand-Eye Coordination:** Do gestures precede the word (indicating authentic thought) or hit precisely on the beat?
 
-   DELIVERY PATTERNS — PSYCHOLOGICAL ARCHITECTURE:
-   - **The Hook:** How do they physically "lean in" to the camera?
-   - **Value Delivery:** Do they slow down or speed up for complex data?
-   - **The "Trust Anchor":** What specific physical action signals "I am telling you the absolute truth"? (e.g., Open palms, eyebrows raised, slight nod).
+   DELIVERY PATTERNS & ELITE PRESENTATION SKILLS:
+   - **The Hook:** The physical and vocal mechanism of capturing immediate attention (e.g., the subtle lean-in, the sharp intake of breath).
+   - **Value Delivery (Pacing):** How do they modulate speed? Do they slow down to make complex data land, and speed up for storytelling momentum?
+   - **The "Trust Anchor":** What specific physical action signals unshakeable conviction? (e.g., Open palms, eyebrows raised, a grounded nod).
 
 2. VISUAL STYLE DNA (The "Director of Photography" Layer)
    - **Lighting Ratios:** Estimate the Key-to-Fill ratio (e.g., 4:1 High Contrast vs 2:1 Flat).
@@ -173,9 +174,9 @@ OUTPUT: Return a complete JSON object matching this exact structure:
 // ============================================================
 export const segmentScript = async (newScript: string, referenceAnalysis: ReferenceAnalysis): Promise<ScriptSegmentation> => {
   const prompt = `
-You are a Master Dramaturg and Cinematic Editor.
+You are a Master Dramaturg, World-Class Script Supervisor, and A-List Cinematic Editor.
 
-Your task is to segment a script into VEO 3.1 scenes programmatically.
+Your task is to segment a script into Elite VEO 3.1 scenes using absolute world-class scene segmentation logic.
 
 === INPUT ANALYSIS ===
 The "NEW SCRIPT" below may be provided in one of two formats:
@@ -184,18 +185,22 @@ The "NEW SCRIPT" below may be provided in one of two formats:
 
 === INSTRUCTIONS FOR BLUEPRINT FORMAT ===
 If the input contains bracketed directives like [VISUAL] or [ACTING]:
-1. **Preserve Intent:** You MUST extract the specific acting directions and visual cues provided in the brackets and map them to the \`acting_blueprint\` and \`camera_direction\` fields.
-2. **Tone & Subtext:** Extract parenthetical tone indicators (e.g., "(Tone: Low, warm...)") into \`acting_blueprint.subtext\` or \`emotional_tone\`.
-3. **Scene Boundaries:** Use the [SCENE START] or [ACTING] breaks as natural scene delimiters, BUT you must still ensure no scene exceeds 8 seconds (approx 17 words). If a Blueprint block is too long, split it logically while carrying over the acting notes.
+1. **Preserve Masterful Intent:** You MUST extract the specific acting directions and visual cues provided in the brackets and map them perfectly to the \`acting_blueprint\` and \`camera_direction\` fields.
+2. **Subtextual Layering:** Extract parenthetical tone indicators (e.g., "(Tone: Low, warm, dangerous...)") into a profound \`acting_blueprint.subtext\` or \`emotional_tone\`.
+3. **Scene Boundaries:** Use the [SCENE START] or [ACTING] breaks as natural scene delimiters, BUT you must still ensure no scene is less than 4 seconds or exceeds 8 seconds. If a Blueprint block is too long, split it gracefully while preserving the emotional arc and carrying over the acting notes.
 
-=== INSTRUCTIONS FOR RAW TEXT ===
-1. The 130 WPM Pacing Rule: Elite, authoritative speech operates at exactly 130 Words Per Minute (WPM).
-2. Target Duration: 5 to 8 seconds per chunk.
-3. Target Word Count: 11 to 17 words per chunk.
-4. The "Breath-Mark" Cut: Split at natural respiratory marks (periods, commas).
+=== WORLD-CLASS SEGMENTATION LOGIC (FOR RAW TEXT) ===
+1. **Dynamic Pacing Matrix (The Hollywood Flow):**
+   - Do NOT use a rigid WPM rule. A master orator varies pacing.
+   - **Data & Value Delivery:** ~110-120 WPM (slow, measured, authoritative).
+   - **Hooks & Excitement:** ~130-140 WPM (sharp, engaging, urgent).
+   - **Storytelling / Bridge:** ~145+ WPM (fluid, conversational momentum).
+2. **Target Duration:** Precisely 4.0 to 8.0 seconds per chunk.
+3. **Target Word Count:** Calculate based on the specific pacing of the scene's emotional tone (roughly 8 to 20 words).
+4. **The "Dramatic Beat Cut":** Do not simply cut on periods and commas. Cut on profound emotional shifts, the crest of a thought, or immediately before a massive revelation. Use the edit to build subconscious tension. A cut is a breath; engineer the breathing of the video.
 
 === FRAME SELECTION STRATEGY (CRITICAL) ===
-- **In-Frame:** Must perfectly match the STARTING energy and expression of this scene.
+- **In-Frame:** Must perfectly match the STARTING energy, posture, and micro-expression of this specific scene's intent.
 - **Out-Frame:** Must perfectly match the ENDING energy and expression of this scene.
 - You MUST select these timestamps ONLY from the provided FRAME LIBRARY.
 
@@ -422,10 +427,10 @@ export const engineerScenePrompt = async (
 
   const prompt = `
 ROLE:
-You are an Elite AI Video Director and Cinematic Prompt Engineer for a high-end Real Estate Private Equity application. Your objective is to take a sliced script chunk, Target Character visuals, and Reference Acting data, and generate a highly technical, 4-section cinematic prompt for AI video models (like Google Veo). Your goal is Hyper-Realism, "Quiet Luxury," and the total eradication of the AI uncanny valley.
+You are an Elite AI Video Director and World-Class Hollywood Acting Coach. Your objective is to take a sliced script chunk, Target Character visuals, and Reference Acting data, and generate a highly technical, 4-section cinematic prompt for AI video models (like Google Veo). Your goal is Hyper-Realism, magnetic charisma, "Quiet Luxury," and the absolute eradication of the AI uncanny valley. The performance MUST meet Oscar-caliber standards of authenticity and magnetism.
 
 TARGET AUDIENCE OPTIMIZATION:
-The output must be specifically engineered as an **Elite Video Sales Letter (VSL)** to pitch to Ultra High Net Worth Individuals (UHNWI), Real Estate Private Equities (REPE), and Family Offices. The tone must be Professional, Confident, and Highly Effective—zero hesitation, absolute competence.
+The output must be specifically engineered as an **Absolute Best Elite Pitch (VSL, High-End YouTube, Investor Briefing)**. The tone must be Professional, Confident, and Dangerously Effective—zero hesitation, absolute competence, magnetic authority.
 
 YOUR DIRECTIVES:
 Output exactly ONE prompt strictly adhering to the following 4-Section Format. Do not use markdown bolding within the sections.
@@ -433,15 +438,15 @@ Output exactly ONE prompt strictly adhering to the following 4-Section Format. D
 FORMAT STRUCTURE:
 
 Visuals: [Detailed cinematic description of the subject, wardrobe, environment, lighting, and camera lens].
-Action & Performance: [Detailed acting instructions, micro-movements, eye contact, and facial expressions].
-Audio Style: [Strict audio engineering rules and voice description].
+Action & Performance: [Detailed Hollywood-caliber acting instructions, magnetic micro-movements, hypnotic eye contact, fluid gestures, and subtextual facial expressions].
+Audio Style: [Strict audio engineering rules, voice description, and masterful pacing/delivery mechanics].
 Script: "[The exact script text]"
 
 CONTENT REQUIREMENTS:
 
 1. Visuals (ELITE PRODUCTION VALUE & STATIC CAMERA):
 - **LOCKED-OFF CAMERA (CRITICAL):** Absolutely NO camera panning, tilting, tracking, or zooming. The camera must remain completely static on a heavy-duty tripod. The only movement in the frame must come from the subject's natural breathing and micro-expressions.
-- **ELITE CINEMATOGRAPHY:** Shot on ARRI Alexa 65, 85mm Zeiss Master Prime lens at f/1.4. Cinematic 8k resolution. Flawless color grading (Kodak Vision3 500T 5219 film stock emulation).
+- **A-LIST CINEMATOGRAPHY:** Shot on ARRI Alexa 65, 85mm Zeiss Master Prime lens at f/1.4. Cinematic 8k resolution. Flawless color grading (Kodak Vision3 500T 5219 film stock emulation).
 - **IDENTITY SOURCE:** Use the [Target Character Image] as the ABSOLUTE SOURCE OF TRUTH for the character's physical identity (face, hair, age, skin texture).
 - **POSE/LIGHTING SOURCE:** Use the [In-Frame Image] and [Out-Frame Image] as the reference for the character's pose, lighting environment, and camera framing.
 - Focus on material physics: "matte skin finish with subtle pores," "unstructured bespoke suit in deep espresso or midnight navy," "heavy-weight white cotton shirt with a fluid natural drape."
@@ -449,27 +454,27 @@ CONTENT REQUIREMENTS:
 - Environment: "Lived-in Luxury" - Softly blurred dark charcoal marble background or an executive suite at 5:00 PM. Give the speaker an inch or two of natural "breathing room" in the frame to feel relaxed and unbothered.
 
 2. Action & Performance (HOLLYWOOD DIRECTING & SCENE PURPOSE):
-- **SCENE PURPOSE OPTIMIZATION:** This scene's role is '${scene.role}'. Engineer the micro-expressions and posture to perfectly serve this specific psychological purpose.
-- **DYNAMIC & ADAPTIVE:** The performance must adapt to the Energy Level (${scene.energy_level}/10) and Intention ("${scene.acting_blueprint.intention}").
-  - **Low Energy (1-3):** High-status stillness, minimal movement, "The Godfather" presence.
-  - **Medium Energy (4-7):** Controlled, deliberate gestures, leaning in to emphasize value, active listening.
-  - **High Energy (8-10):** High-octane conviction, sharp and decisive hand movements, intense forward engagement.
-- **Scene-Specific Direction:**
+- **SCENE PURPOSE OPTIMIZATION:** This scene's role is '${scene.role}'. Engineer the micro-expressions, posture, and magnetic presence to flawlessly execute this specific psychological purpose.
+- **DYNAMIC & ADAPTIVE (THE MASTERCLASS):** The performance must adapt to the Energy Level (${scene.energy_level}/10) and Intention ("${scene.acting_blueprint.intention}").
+  - **Low Energy (1-3):** High-status stillness, hypnotic minimal movement, "The Godfather" presence. Command the room by doing nothing.
+  - **Medium Energy (4-7):** Controlled, fluid, deliberate gestures. The "Advisor." Leaning in slightly to emphasize massive value, active, penetrating listening.
+  - **High Energy (8-10):** High-octane conviction, sharp but fluid and decisive hand movements, intense forward engagement. The "Closer." Absolute certainty.
+- **Scene-Specific Hollywood Direction:**
   - Intention: "${scene.acting_blueprint.intention}"
-  - Subtext: "${scene.acting_blueprint.subtext}"
+  - Subtext (The Secret): "${scene.acting_blueprint.subtext}"
   - Expression: "${scene.acting_blueprint.expression_direction}"
   - Body Direction: "${scene.acting_blueprint.body_direction}"
-- **Micro-Expression Engineering (The "Fluid Anchor"):** Explicitly prompt for "subtle chest breathing, natural micro-movements of the head while speaking, slightly asymmetrical posture, and soft, natural blinks." The gaze must be sustained and relaxed—never darting away to search for words.
-- **Elite Presence:** Use deliberate, confident gestures (e.g., "a subtle, authoritative nod," "a slight lean-in to emphasize value") to drive the point home. True power isn't stiff; it is entirely at ease.
+- **Magnetic Micro-Expression Engineering (The "Fluid Anchor"):** Explicitly prompt for "subtle chest breathing, authentic micro-movements of the head while speaking, slightly asymmetrical grounded posture, and soft, natural, deliberate blinks." The gaze must be sustained, relaxed, and piercing—never darting away to search for words.
+- **Elite Presentation Skills:** Use deliberate, highly charismatic gestures (e.g., "a subtle, authoritative nod," "a slight lean-in to share a secret," "open palms to signal absolute truth") to drive the point home. True power is fluid; it is entirely at ease, yet impossible to ignore.
 
-3. Audio Style:
+3. Audio Style (THE SOUND OF INFLUENCE):
 - **Speaker Label:** @elite_financial_narrator (Maintain this exact label for 100% voice consistency across all generated clips).
 - **Language:** English (United States) - Spoken.
 - **Quality:** Studio Master. Pure, raw, bone-dry vocal track. Near-field proximity effect. Zero noise floor.
 - ABSOLUTELY NO background music, NO sound effects, NO room reverb, NO ambient noise.
 - Voice Profile: ${JSON.stringify(referenceAnalysis.character.voice)}.
 - Accent: Standard American English broadcast accent (unless Voice DNA specifies otherwise).
-- Delivery: Conversational pacing. Glide through the setup naturally, and only use silence after the heaviest metrics to let them land. End sentences with a downward inflection for gravity.
+- **Masterful Delivery & Pacing:** Implement absolute world-class vocal control. Glide through the setup naturally with conversational momentum. Implement strategic, dramatic pauses before massive revelations. End critical sentences with the "Authority Drop" (a slight downward inflection) to anchor the statement in absolute gravity and unquestionable truth. Vary the cadence to hypnotize the listener.
 
 4. Script:
 - Exact text: "${scene.script_text}"
