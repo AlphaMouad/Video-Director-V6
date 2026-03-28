@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  analyzeReferenceVideo, 
-  segmentScript, 
-  extractFrameFromVideo, 
+  architectScript,
   engineerScenePrompt, 
-  generateCharacterFrame,
+  generateSceneFrame,
   setApiKey
 } from './services/geminiService';
 import { AppState, EngineeredScene, ScriptScene } from './types';
@@ -12,10 +10,9 @@ import { AppState, EngineeredScene, ScriptScene } from './types';
 export default function App() {
   const [state, setState] = useState<AppState>({
     step: 'upload',
-    referenceVideo: null,
     targetCharacter: null,
+    contextImages: [],
     newScript: '',
-    referenceAnalysis: null,
     scriptSegmentation: null,
     selectedSceneIndex: null,
     sceneProcessing: 'idle',
@@ -24,8 +21,6 @@ export default function App() {
     completedScenes: [],
     inframeImage: null,
     outframeImage: null,
-    inframeTimestamp: null,
-    outframeTimestamp: null,
     useCustomInframe: false,
     useCustomOutframe: false,
     showOptimizationModal: false,
@@ -39,8 +34,8 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [apiKey, setApiKeyState] = useState<string>('');
   const [isKeySet, setIsKeySet] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const targetCharInputRef = useRef<HTMLInputElement>(null);
+  const contextImagesInputRef = useRef<HTMLInputElement>(null);
   const inframeRef = useRef<HTMLInputElement>(null);
   const outframeRef = useRef<HTMLInputElement>(null);
   const customInframeRef = useRef<HTMLInputElement>(null);
@@ -73,15 +68,10 @@ export default function App() {
   };
 
   const handleBeginAnalysis = async () => {
-    if (!state.referenceVideo || !state.targetCharacter || !state.newScript.trim()) return;
+    if (!state.targetCharacter || !state.newScript.trim()) return;
     try {
-      // Phase 2: Analyze reference video
-      setState(s => ({ ...s, step: 'analyzing-reference', processingStatus: 'Phase 1/2 — Extracting Performance DNA...' }));
-      const analysis = await analyzeReferenceVideo(state.referenceVideo);
-
-      // Phase 3: Segment script
-      setState(s => ({ ...s, step: 'segmenting', processingStatus: 'Phase 2/2 — Architecting Scene Sequence...', referenceAnalysis: analysis }));
-      const segmentation = await segmentScript(state.newScript, analysis);
+      setState(s => ({ ...s, step: 'architecting', processingStatus: 'Deploying Director & Acting Agents...' }));
+      const segmentation = await architectScript(state.newScript);
 
       setState(s => ({ ...s, step: 'scenes', scriptSegmentation: segmentation }));
     } catch (err) {
@@ -91,7 +81,7 @@ export default function App() {
   };
 
   const selectScene = async (index: number) => {
-    if (!state.scriptSegmentation || !state.referenceVideo) return;
+    if (!state.scriptSegmentation) return;
     const scene = state.scriptSegmentation.scenes[index];
     const existing = state.completedScenes.find(c => c.scene_number === scene.scene_number);
 
@@ -100,8 +90,6 @@ export default function App() {
       selectedSceneIndex: index,
       inframeImage: null,
       outframeImage: null,
-      inframeTimestamp: scene.recommended_inframe.timestamp,
-      outframeTimestamp: scene.recommended_outframe.timestamp,
       useCustomInframe: false,
       useCustomOutframe: false,
       currentPrompt: existing ? existing.veo_prompt : null,
@@ -109,21 +97,16 @@ export default function App() {
       error: null
     }));
 
-    // Auto-extract frames from reference video
+    // Auto-generate frames using Scene Prompts
     try {
-      setState(s => ({ ...s, sceneProcessing: 'engineering', sceneProcessingStatus: 'Generating Character Frames...' }));
+      setState(s => ({ ...s, sceneProcessing: 'engineering', sceneProcessingStatus: 'Generating Cinematic Frames...' }));
       const [inBlob, outBlob] = await Promise.all([
-        extractFrameFromVideo(state.referenceVideo, scene.recommended_inframe.timestamp),
-        extractFrameFromVideo(state.referenceVideo, scene.recommended_outframe.timestamp)
+        generateSceneFrame(scene.frame_descriptions.inframe_prompt, state.targetCharacter!, state.contextImages),
+        generateSceneFrame(scene.frame_descriptions.outframe_prompt, state.targetCharacter!, state.contextImages)
       ]);
 
-      const [enhancedInBlob, enhancedOutBlob] = await Promise.all([
-        generateCharacterFrame(inBlob, state.targetCharacter!, scene.role, scene.emotional_tone),
-        generateCharacterFrame(outBlob, state.targetCharacter!, scene.role, scene.emotional_tone)
-      ]);
-
-      const inFile = new File([enhancedInBlob], `inframe-scene-${scene.scene_number}.jpg`, { type: 'image/jpeg' });
-      const outFile = new File([enhancedOutBlob], `outframe-scene-${scene.scene_number}.jpg`, { type: 'image/jpeg' });
+      const inFile = new File([inBlob], `inframe-scene-${scene.scene_number}.jpg`, { type: 'image/jpeg' });
+      const outFile = new File([outBlob], `outframe-scene-${scene.scene_number}.jpg`, { type: 'image/jpeg' });
 
       setState(s => ({
         ...s,
@@ -136,7 +119,7 @@ export default function App() {
       // Frame extraction failed — user can upload manually
       setState(s => ({ 
         ...s, 
-        error: 'Auto frame extraction failed. Please upload frames manually.',
+        error: 'Auto frame generation failed. Please upload frames manually.',
         sceneProcessing: existing ? 'complete' : 'idle',
         sceneProcessingStatus: ''
       }));
@@ -144,7 +127,7 @@ export default function App() {
   };
 
   const handleEngineerScene = async () => {
-    if (state.selectedSceneIndex === null || !state.scriptSegmentation || !state.referenceAnalysis) return;
+    if (state.selectedSceneIndex === null || !state.scriptSegmentation) return;
     if (!state.inframeImage || !state.outframeImage) return;
 
     const scene = state.scriptSegmentation.scenes[state.selectedSceneIndex];
@@ -154,11 +137,11 @@ export default function App() {
 
       const prompt = await engineerScenePrompt(
         scene,
-        state.referenceAnalysis,
         state.inframeImage,
         state.outframeImage,
         state.targetCharacter!,
-        state.completedScenes
+        state.completedScenes,
+        state.contextImages
       );
 
       const newEngineered: EngineeredScene = {
@@ -322,28 +305,6 @@ export default function App() {
             </div>
             
             <div className="grid grid-cols-2 gap-6">
-              {/* Reference Video Upload */}
-              <div 
-                className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-300 cursor-pointer relative group ${state.referenceVideo ? 'border-gold/50 bg-gold/5' : 'border-slate-700 hover:border-gold/30 hover:bg-slate-900/50'}`} 
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input type="file" ref={fileInputRef} className="hidden" accept="video/*" onChange={e => setState(s => ({ ...s, referenceVideo: e.target.files?.[0] || null }))} />
-                <div className={`w-12 h-12 mx-auto mb-4 transition-colors duration-300 ${state.referenceVideo ? 'text-gold' : 'text-slate-600 group-hover:text-gold/60'}`}>
-                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                </div>
-                {state.referenceVideo ? (
-                  <div>
-                      <p className="text-white text-lg font-medium">{state.referenceVideo.name}</p>
-                      <p className="text-xs text-gold uppercase mt-1">Reference Video Loaded</p>
-                  </div>
-                ) : (
-                  <div>
-                      <p className="text-slate-300 group-hover:text-white transition-colors font-medium">Upload Reference Video</p>
-                      <p className="text-slate-500 text-sm mt-1">The performer whose style you want to capture</p>
-                  </div>
-                )}
-              </div>
-
               {/* Target Character Upload */}
               <div 
                 className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-300 cursor-pointer relative group ${state.targetCharacter ? 'border-gold/50 bg-gold/5' : 'border-slate-700 hover:border-gold/30 hover:bg-slate-900/50'}`} 
@@ -367,6 +328,40 @@ export default function App() {
               </div>
             </div>
 
+            {/* Context Images Upload */}
+            <div
+              className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all duration-300 cursor-pointer relative group ${state.contextImages.length > 0 ? 'border-gold/50 bg-gold/5' : 'border-slate-700 hover:border-gold/30 hover:bg-slate-900/50'}`}
+              onClick={() => contextImagesInputRef.current?.click()}
+            >
+              <input
+                type="file"
+                ref={contextImagesInputRef}
+                className="hidden"
+                accept="image/*"
+                multiple
+                onChange={e => {
+                  if (e.target.files) {
+                    const files = Array.from(e.target.files).slice(0, 5); // Max 5
+                    setState(s => ({ ...s, contextImages: files }));
+                  }
+                }}
+              />
+              <div className={`w-12 h-12 mx-auto mb-4 transition-colors duration-300 ${state.contextImages.length > 0 ? 'text-gold' : 'text-slate-600 group-hover:text-gold/60'}`}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </div>
+              {state.contextImages.length > 0 ? (
+                <div>
+                    <p className="text-white text-lg font-medium">{state.contextImages.length} Image(s) Selected</p>
+                    <p className="text-xs text-gold uppercase mt-1">Context Loaded</p>
+                </div>
+              ) : (
+                <div>
+                    <p className="text-slate-300 group-hover:text-white transition-colors font-medium">Upload Context Images (Optional)</p>
+                    <p className="text-slate-500 text-sm mt-1">Up to 5 images for environment & wardrobe references</p>
+                </div>
+              )}
+            </div>
+
             {/* Script Textarea */}
             <div className="relative group">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-gold/20 to-slate-800/50 rounded-2xl blur opacity-30 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
@@ -382,18 +377,18 @@ export default function App() {
             </div>
 
             <button 
-              disabled={!state.referenceVideo || !state.targetCharacter || !state.newScript.trim()} 
+              disabled={!state.targetCharacter || !state.newScript.trim()}
               onClick={handleBeginAnalysis} 
               className="w-full py-4 bg-white text-black text-xl font-serif italic rounded-xl hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transform hover:scale-[1.01]"
             >
-              Begin Performance DNA Extraction
+              Deploy Elite Directing & Acting Agents
             </button>
           </div>
         </div>
       )}
 
-      {/* VIEW 2: LOADING (ANALYZING / SEGMENTING) */}
-      {(state.step === 'analyzing-reference' || state.step === 'segmenting') && (
+      {/* VIEW 2: LOADING (ARCHITECTING) */}
+      {state.step === 'architecting' && (
         <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-8 bg-[#020617]">
           <div className="relative w-32 h-32">
             <div className="absolute inset-0 border-4 border-t-gold border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
@@ -401,18 +396,9 @@ export default function App() {
           </div>
           <div className="text-center space-y-4">
             <h2 className="font-serif italic text-4xl text-white animate-pulse">
-                {state.step === 'analyzing-reference' ? 'Extracting Performance DNA' : 'Architecting Scene Sequence'}
+                Architecting Scene Sequence
             </h2>
             <p className="text-gold/60 tracking-wider text-sm font-mono uppercase">{state.processingStatus}</p>
-            <div className="flex items-center justify-center space-x-2 mt-4 text-xs text-slate-500 font-mono">
-                <span className={state.step === 'analyzing-reference' ? 'text-gold' : 'text-emerald-500'}>
-                    {state.step === 'analyzing-reference' ? '● Phase 1: DNA Extraction' : '✓ Phase 1: DNA Extraction'}
-                </span>
-                <span>→</span>
-                <span className={state.step === 'segmenting' ? 'text-gold' : 'text-slate-700'}>
-                   {state.step === 'segmenting' ? '● Phase 2: Segmentation' : 'Phase 2: Segmentation'}
-                </span>
-            </div>
           </div>
         </div>
       )}
@@ -430,7 +416,7 @@ export default function App() {
             <div className="flex items-center space-x-6">
                <div className="flex items-center space-x-2 text-xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
-                  <span className="text-slate-400">Performance DNA Loaded</span>
+                  <span className="text-slate-400">Agents Deployed</span>
                </div>
               <span className="text-slate-400 text-sm font-mono">{state.completedScenes.length} / {state.scriptSegmentation.scenes.length} scenes</span>
               <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden">
@@ -523,36 +509,45 @@ export default function App() {
                   {state.sceneProcessing === 'idle' && (
                     <div className="space-y-6 animate-in fade-in duration-500">
                       
-                      {/* Section A: Script & Blueprint */}
+                      {/* Section A: Script & Agent Notes */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                          <div className="lg:col-span-2 bg-black/40 border border-white/5 p-8 rounded-2xl relative overflow-hidden">
-                             <div className="absolute top-0 left-0 w-1 h-full bg-gold/30"></div>
-                             <h4 className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-4">Script Segment</h4>
-                             <p className="font-serif italic text-3xl text-white/90 leading-relaxed">
-                                "{state.scriptSegmentation.scenes[state.selectedSceneIndex].script_text}"
-                             </p>
-                             <div className="mt-6 flex flex-wrap gap-2">
-                                <span className="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-white/5">Energy: {state.scriptSegmentation.scenes[state.selectedSceneIndex].energy_level}/10</span>
-                                <span className="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-white/5">Pace: {state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_blueprint.delivery_pace_wpm} WPM</span>
-                                <span className="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded border border-white/5">Tone: {state.scriptSegmentation.scenes[state.selectedSceneIndex].emotional_tone}</span>
+                          <div className="bg-black/40 border border-white/5 p-8 rounded-2xl relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500/30"></div>
+                             <h4 className="text-blue-400 text-xs font-bold tracking-widest uppercase mb-4 flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                Directing Agent
+                             </h4>
+                             <div className="space-y-4 text-sm">
+                                <div><span className="text-slate-500 block text-xs uppercase">Framing & Angle</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].directing_notes.framing} / {state.scriptSegmentation.scenes[state.selectedSceneIndex].directing_notes.camera_angle}</span></div>
+                                <div><span className="text-slate-500 block text-xs uppercase">Lighting Mood</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].directing_notes.lighting_mood}</span></div>
+                                <div><span className="text-slate-500 block text-xs uppercase">Pacing Strategy</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].directing_notes.pacing_strategy}</span></div>
+                                <div><span className="text-slate-500 block text-xs uppercase">Visual Business</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].directing_notes.visual_business}</span></div>
+                             </div>
+                          </div>
+
+                          <div className="bg-black/40 border border-white/5 p-8 rounded-2xl relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-rose-500/30"></div>
+                             <h4 className="text-rose-400 text-xs font-bold tracking-widest uppercase mb-4 flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Acting Agent
+                             </h4>
+                             <div className="space-y-4 text-sm">
+                                <div><span className="text-slate-500 block text-xs uppercase">Intention</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_notes.intention}</span></div>
+                                <div><span className="text-slate-500 block text-xs uppercase">Vocal Delivery</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_notes.vocal_delivery}</span></div>
+                                <div><span className="text-slate-500 block text-xs uppercase">Posture & Body</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_notes.posture_and_body}</span></div>
+                                <div><span className="text-slate-500 block text-xs uppercase">Micro-Expressions</span><span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_notes.micro_expressions}</span></div>
                              </div>
                           </div>
                           
-                          <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl">
-                              <h4 className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-4">Acting Blueprint</h4>
-                              <div className="space-y-4 text-sm">
-                                  <div>
-                                      <span className="text-slate-500 block text-xs uppercase">Intention</span>
-                                      <span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_blueprint.intention}</span>
-                                  </div>
-                                  <div>
-                                      <span className="text-slate-500 block text-xs uppercase">Subtext</span>
-                                      <span className="text-slate-300 italic">"{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_blueprint.subtext}"</span>
-                                  </div>
-                                  <div>
-                                      <span className="text-slate-500 block text-xs uppercase">Gestures</span>
-                                      <span className="text-slate-300">{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_blueprint.mapped_gestures.join(', ')}</span>
-                                  </div>
+                          <div className="bg-slate-900/40 border border-white/5 p-6 rounded-2xl flex flex-col justify-center relative overflow-hidden">
+                              <div className="absolute top-0 left-0 w-1 h-full bg-gold/30"></div>
+                              <h4 className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-4">Script Segment</h4>
+                              <p className="font-serif italic text-2xl text-white/90 leading-relaxed">
+                                "{state.scriptSegmentation.scenes[state.selectedSceneIndex].script_text}"
+                              </p>
+                              <div className="mt-4 pt-4 border-t border-white/5">
+                                 <span className="text-slate-500 block text-xs uppercase mb-1">Subtext (The Secret)</span>
+                                 <span className="text-gold/80 italic text-sm">"{state.scriptSegmentation.scenes[state.selectedSceneIndex].acting_notes.subtext}"</span>
                               </div>
                           </div>
                       </div>
@@ -567,8 +562,7 @@ export default function App() {
                             {/* IN-FRAME */}
                             <div className="space-y-3">
                                 <div className="flex justify-between text-xs text-slate-400">
-                                    <span className="uppercase tracking-widest font-bold">In-Frame</span>
-                                    <span className="font-mono">@ {state.scriptSegmentation.scenes[state.selectedSceneIndex].recommended_inframe.timestamp}</span>
+                                    <span className="uppercase tracking-widest font-bold">In-Frame Gen</span>
                                 </div>
                                 <div className="aspect-video bg-black rounded-lg border border-white/10 overflow-hidden relative group">
                                     {state.inframeImage ? (
@@ -577,8 +571,8 @@ export default function App() {
                                         <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">Loading Frame...</div>
                                     )}
                                 </div>
-                                <p className="text-xs text-slate-500 leading-relaxed min-h-[40px]">
-                                    {state.scriptSegmentation.scenes[state.selectedSceneIndex].recommended_inframe.rationale}
+                                <p className="text-[10px] text-slate-500 leading-relaxed min-h-[40px]">
+                                    {state.scriptSegmentation.scenes[state.selectedSceneIndex].frame_descriptions.inframe_prompt}
                                 </p>
                                 <div className="flex gap-4">
                                   {state.inframeImage && (
@@ -588,7 +582,7 @@ export default function App() {
                                       className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors flex items-center gap-1"
                                     >
                                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                      Download Original Frame
+                                      Download Frame
                                     </a>
                                   )}
                                 </div>
@@ -597,8 +591,7 @@ export default function App() {
                             {/* OUT-FRAME */}
                             <div className="space-y-3">
                                 <div className="flex justify-between text-xs text-slate-400">
-                                    <span className="uppercase tracking-widest font-bold">Out-Frame</span>
-                                    <span className="font-mono">@ {state.scriptSegmentation.scenes[state.selectedSceneIndex].recommended_outframe.timestamp}</span>
+                                    <span className="uppercase tracking-widest font-bold">Out-Frame Gen</span>
                                 </div>
                                 <div className="aspect-video bg-black rounded-lg border border-white/10 overflow-hidden relative group">
                                     {state.outframeImage ? (
@@ -607,8 +600,8 @@ export default function App() {
                                         <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">Loading Frame...</div>
                                     )}
                                 </div>
-                                <p className="text-xs text-slate-500 leading-relaxed min-h-[40px]">
-                                    {state.scriptSegmentation.scenes[state.selectedSceneIndex].recommended_outframe.rationale}
+                                <p className="text-[10px] text-slate-500 leading-relaxed min-h-[40px]">
+                                    {state.scriptSegmentation.scenes[state.selectedSceneIndex].frame_descriptions.outframe_prompt}
                                 </p>
                                 <div className="flex gap-4">
                                   {state.outframeImage && (
@@ -618,7 +611,7 @@ export default function App() {
                                       className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors flex items-center gap-1"
                                     >
                                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                                      Download Original Frame
+                                      Download Frame
                                     </a>
                                   )}
                                 </div>
